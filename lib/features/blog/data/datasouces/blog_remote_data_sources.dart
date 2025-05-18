@@ -49,6 +49,8 @@ class BlogRemoteDataSourcesImpl extends BlogRemoteDataSources {
             image,
           ); //blog.id is the floder in which our image gonna stored and if we change that path thwn we have to change the path in getpublicurl too in below. and if we want to stored the multiple image the creat the file inside the folder which is done like this : '${blod.id}/image' here blog.id is floder and image is the file .
       return supabaseClient.storage.from("blogs_images").getPublicUrl(blog.id);
+    } on StorageException catch (e) {
+      throw ServerException(e.message);
     } catch (e) {
       throw ServerException(e.toString());
     }

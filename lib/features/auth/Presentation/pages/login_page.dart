@@ -6,6 +6,7 @@ import 'package:blog_app/features/auth/Presentation/Widgets/auth_gradient_button
 import 'package:blog_app/features/auth/Presentation/bloc/auth_bloc.dart';
 
 import 'package:blog_app/features/auth/Presentation/pages/signup_page.dart';
+import 'package:blog_app/features/blog/presentation/pages/blog_page.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -39,12 +40,18 @@ class _LoginPageState extends State<LoginPage> {
           listener: (context, state) {
             if (state is AuthFailure) {
               showSnackbar(context, state.message);
+            } else if (state is AuthSuccess) {
+              Navigator.pushAndRemoveUntil(
+                context,
+                BlogPage.route(),
+                (route) => false,
+              );
             }
           },
           builder: (context, state) {
-            if (state is AuthFailure) {
+            /*  if (state is AuthFailure) {
               return const Loader();
-            }
+            } */
             return Form(
               key: formkey,
               child: Column(

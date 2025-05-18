@@ -1,5 +1,5 @@
 import 'dart:io';
-
+import 'package:blog_app/core/constants/constants.dart';
 import 'package:blog_app/core/error/exception.dart';
 import 'package:blog_app/core/error/failures.dart';
 import 'package:blog_app/core/network/connection_checker.dart';
@@ -30,6 +30,9 @@ class BlogRepositoryImpl implements BlogRepository {
     required List<String> topics,
   }) async {
     try {
+      if (!await (connectionChecker.isConnected)) {
+        return left(Failures(Constants.noConnectionErrorMessage));
+      }
       BlogModel blogModel = BlogModel(
         id: const Uuid().v1(),
         posterId: posterId,
@@ -60,7 +63,12 @@ class BlogRepositoryImpl implements BlogRepository {
   @override
   Future<Either<Failures, List<Blog>>> getAllBlogs() async {
     try {
+      if (!await (connectionChecker.isConnected)) {
+        final blogs = blogLocalDataSource.loadBlogs();
+        return right(blogs);
+      }
       final blogs = await blogRemoteDataSources.getAllBlogs();
+      blogLocalDataSource.uploadLocalBlogs(blogs: blogs);
 
       return right(
         blogs,

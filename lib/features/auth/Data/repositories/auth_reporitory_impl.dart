@@ -1,11 +1,12 @@
+import 'package:blog_app/core/constants/constants.dart';
 import 'package:blog_app/core/error/exception.dart';
 import 'package:blog_app/core/error/failures.dart';
 import 'package:blog_app/core/network/connection_checker.dart';
 import 'package:blog_app/features/auth/Data/datasoureces/auth_remote_data_sources.dart';
 import 'package:blog_app/core/common/entities/user.dart';
+import 'package:blog_app/features/auth/Data/models/user_model.dart';
 import 'package:blog_app/features/auth/Domain/repository/auth_repository.dart';
 import 'package:fpdart/fpdart.dart';
-import 'package:supabase_flutter/supabase_flutter.dart' as sb;
 
 class AuthReporitoryImpl implements AuthRepository {
   final AuthRemoteDataSource remoteDataSource;
@@ -15,12 +16,20 @@ class AuthReporitoryImpl implements AuthRepository {
   @override
   Future<Either<Failures, User>> currentUser() async {
     try {
-      if (!await (ConnectionChecker.isConnected)) {
+      if (!await (connectionChecker.isConnected)) {
         final session = remoteDataSource.currentUserSession;
         if (session == null) {
-          return left(Failures("User not logged in!! "));
+          return left(
+            Failures("User not logged in!! Beacuase of session is empty!!  "),
+          );
         }
-        return left(Failures("No internet connection!! "));
+        return right(
+          UserModel(
+            id: session.user.id,
+            email: session.user.email ?? "",
+            name: "",
+          ),
+        );
       }
       final user = await remoteDataSource.getCurrentUserData();
       if (user == null) {
@@ -67,14 +76,12 @@ class AuthReporitoryImpl implements AuthRepository {
   Future<Either<Failures, User>> _getUser(Future<User> Function() fn) async {
     //wrapper function
     try {
-      if (!await (ConnectionChecker.isConnected)) {
-        return left(Failures("No internet connection!! "));
+      if (!await (connectionChecker.isConnected)) {
+        return left(Failures(Constants.noConnectionErrorMessage));
       }
       final user = await fn(); // calling... fn()
 
       return right(user);
-    } on sb.AuthException catch (e) {
-      return left(Failures(e.message));
     } on ServerException catch (e) {
       return left(Failures(e.message));
     }
